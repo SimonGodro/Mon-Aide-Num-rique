@@ -67,15 +67,27 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Diagnostic temporaire (visible dans l'onglet Réseau du navigateur, réponse de la
+    // requête) : à retirer une fois le problème identifié. N'affecte pas le formulaire,
+    // le site ne regarde que le statut 200, jamais ce contenu.
+    const debug = {
+      supabaseConfigured: !!supabase,
+      supabaseError: null,
+      resendConfigured: !!resend,
+      notifyEmailSet: !!process.env.CONTACT_NOTIFY_EMAIL,
+      resendError: null,
+    };
+
     // 1. Supabase (best-effort : une erreur ici ne doit pas empêcher l'email de vous prévenir,
     // ni faire planter la fonction — d'où le try/catch : sans lui, une clé invalide ou une
     // table absente faisait remonter une erreur non gérée et renvoyait "Un problème est survenu").
     if (supabase) {
       try {
         const { error } = await supabase.from('demandes_rappel').insert({ name, phone, consent });
-        if (error) console.error('Erreur insertion Supabase (demandes_rappel) :', error);
+        if (error) { console.error('Erreur insertion Supabase (demandes_rappel) :', error); debug.supabaseError = error.message || String(error); }
       } catch (err) {
         console.error('Exception Supabase (demandes_rappel) :', err);
+        debug.supabaseError = (err && err.message) || String(err);
       }
     } else {
       console.warn('Supabase non configuré (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY manquants) — demande non enregistrée.');
@@ -84,7 +96,7 @@ module.exports = async (req, res) => {
     // 2. Email pour vous prévenir qu'il faut rappeler la personne
     if (resend && process.env.CONTACT_NOTIFY_EMAIL) {
       try {
-        await resend.emails.send({
+        const sendResult = await resend.emails.send({
           from: process.env.RESEND_FROM || 'Mon Aide Numérique <onboarding@resend.dev>',
           to: process.env.CONTACT_NOTIFY_EMAIL,
           subject: `Nouvelle demande de rappel — ${name}`,
@@ -95,14 +107,16 @@ module.exports = async (req, res) => {
             <p>Merci de la rappeler dès que possible.</p>
           `,
         });
+        if (sendResult && sendResult.error) { console.error('Erreur envoi email Resend (demande de rappel) :', sendResult.error); debug.resendError = sendResult.error.message || String(sendResult.error); }
       } catch (err) {
         console.error('Erreur envoi email Resend (demande de rappel) :', err);
+        debug.resendError = (err && err.message) || String(err);
       }
     } else {
       console.warn('Resend ou CONTACT_NOTIFY_EMAIL non configuré — email de notification non envoyé.');
     }
 
-    res.status(200).json({ ok: true });
+    res.status(200).json({ ok: true, debug });
   } catch (err) {
     // Filet de sécurité : si quelque chose d'imprévu plante, on le journalise clairement
     // (visible dans Vercel > Deployments > ce déploiement > Functions > demande-rappel,
