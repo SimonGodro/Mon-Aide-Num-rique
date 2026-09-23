@@ -73,10 +73,9 @@ a:hover{color:var(--accent-hover)}
 .top-actions{display:flex;align-items:center;gap:8px}
 
 /* buttons and form */
-.btn{display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 30px;border-radius:16px;background:var(--accent);color:var(--on-accent);border:2px solid var(--accent);font:inherit;font-weight:700;font-size:1.05rem;text-decoration:none;cursor:pointer;text-align:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 30px;border-radius:8px;background:var(--accent);color:var(--on-accent);border:2px solid var(--accent);font:inherit;font-weight:700;font-size:1.05rem;text-decoration:none;cursor:pointer;text-align:center}
 .btn:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:var(--on-accent)}
 .btn-small{min-height:48px;padding:0 22px}
-.top-cta{border-radius:8px}
 .btn-outline{background:transparent;color:var(--accent-ink);border-color:var(--accent-ink)}
 .btn-outline:hover{background:var(--tint);color:var(--accent-hover);border-color:var(--accent-hover)}
 .hint{color:var(--muted);font-size:1.02rem}
@@ -97,11 +96,12 @@ a:hover{color:var(--accent-hover)}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .thanks{max-width:560px;padding:20px 22px;border-radius:16px;background:var(--surface);border:2px solid var(--accent);font-weight:700}
 
-.rappel-dialog{position:fixed;margin:auto;width:min(560px,calc(100% - 40px));max-height:min(680px,calc(100% - 40px));border:none;border-radius:28px;padding:32px 24px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow-b)}
+.rappel-dialog{position:fixed;margin:auto;width:min(560px,calc(100% - 40px));max-height:min(680px,calc(100% - 40px));overflow-y:auto;border:none;border-radius:28px;padding:32px 24px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow-b);display:flex;flex-direction:column;gap:20px}
 @media (min-width:720px){.rappel-dialog{padding:40px}}
 .rappel-dialog::backdrop{background:rgba(27,61,47,.55)}
 .rappel-dialog:not([open]){display:none}
 .rappel-dialog .form{max-width:none}
+.rappel-dialog .eyebrow{font-family:'Outfit',system-ui,sans-serif;font-weight:600;font-size:1.6rem;letter-spacing:-0.01em;margin-bottom:0}
 .dialog-close{position:absolute;top:18px;right:18px;width:44px;height:44px;border-radius:12px;background:transparent;border:none;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .dialog-close:hover{background:var(--tint)}
 
@@ -315,8 +315,7 @@ p,.lead,.hint,.ans,td,th{text-wrap:pretty}
   <button type="button" class="dialog-close" data-close-dialog aria-label="Fermer">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg>
   </button>
-  <p class="eyebrow">Contactez-nous</p>
-  <h2 id="titre-rappel">On vous rappelle, sans engagement.</h2>
+  <p class="eyebrow" id="titre-rappel">Contactez-nous</p>
   <p class="lead">Laissez-nous votre prénom et votre numéro&nbsp;: un membre de notre équipe vous appellera pour répondre à toutes vos questions concernant l’assistant Paul.</p>
   <div id="form-wrap-rappel">
     <form class="form" data-n="rappel" aria-label="Être rappelé">
