@@ -96,13 +96,13 @@ a:hover{color:var(--accent-hover)}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .thanks{max-width:560px;padding:20px 22px;border-radius:16px;background:var(--surface);border:2px solid var(--accent);font-weight:700}
 
-.rappel-dialog{position:fixed;margin:auto;width:min(560px,calc(100% - 40px));max-height:min(680px,calc(100% - 40px));overflow-y:auto;border:none;border-radius:28px;padding:32px 24px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow-b);display:flex;flex-direction:column;gap:20px}
+.rappel-dialog{position:fixed;margin:auto;width:min(560px,calc(100% - 40px));max-height:min(680px,calc(100% - 40px));overflow-y:auto;border:none;border-radius:16px;padding:32px 24px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow-b);display:flex;flex-direction:column;gap:20px}
 @media (min-width:720px){.rappel-dialog{padding:40px}}
 .rappel-dialog::backdrop{background:rgba(27,61,47,.55)}
 .rappel-dialog:not([open]){display:none}
 .rappel-dialog .form{max-width:none}
 .rappel-dialog .eyebrow{font-family:'Outfit',system-ui,sans-serif;font-weight:600;font-size:1.6rem;letter-spacing:-0.01em;margin-bottom:0}
-.dialog-close{position:absolute;top:18px;right:18px;width:44px;height:44px;border-radius:12px;background:transparent;border:none;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.dialog-close{position:absolute;top:18px;right:18px;width:44px;height:44px;border-radius:8px;background:transparent;border:none;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .dialog-close:hover{background:var(--tint)}
 
 .todo{background:var(--todo);color:var(--todo-ink);padding:0 5px;border-radius:5px;font-weight:700}
@@ -316,12 +316,16 @@ p,.lead,.hint,.ans,td,th{text-wrap:pretty}
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg>
   </button>
   <p class="eyebrow" id="titre-rappel">Contactez-nous</p>
-  <p class="lead">Laissez-nous votre prénom et votre numéro&nbsp;: un membre de notre équipe vous appellera pour répondre à toutes vos questions concernant l’assistant Paul.</p>
+  <p class="lead">Un membre de notre équipe vous appellera pour répondre à toutes vos questions concernant l’assistant Paul.</p>
   <div id="form-wrap-rappel">
     <form class="form" data-n="rappel" aria-label="Être rappelé">
       <div class="form-row">
         <div class="fld"><label for="prenom-r">Votre prénom</label>
         <input class="field" id="prenom-r" name="prenom" type="text" autocomplete="given-name" placeholder="Marie" required></div>
+        <div class="fld"><label for="nom-r">Votre nom</label>
+        <input class="field" id="nom-r" name="nom" type="text" autocomplete="family-name" placeholder="Dupont" required></div>
+      </div>
+      <div class="form-row">
         <div class="fld"><label for="tel-r">Votre téléphone</label>
         <input class="field" id="tel-r" name="telephone" type="tel" autocomplete="tel" placeholder="06 12 34 56 78" required></div>
       </div>
@@ -331,7 +335,7 @@ p,.lead,.hint,.ans,td,th{text-wrap:pretty}
       <p class="hint" role="status"></p>
     </form>
   </div>
-  <p class="thanks" id="thanks-rappel" role="status" hidden>Merci&nbsp;! Nous vous rappellerons rapidement.</p>
+  <p class="thanks" id="thanks-rappel" role="status" hidden>C’est noté&nbsp;! Un membre de notre équipe vous contactera très prochainement.</p>
 </dialog>
 
   <!-- 1. HERO -->
@@ -628,7 +632,7 @@ document.querySelectorAll('form[data-n]').forEach(function (form) {
       const r = await fetch('/api/demande-rappel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: f.prenom.value.trim(), phone: f.telephone.value.trim(), consent: f.consent.checked })
+        body: JSON.stringify({ name: f.prenom.value.trim(), lastName: f.nom.value.trim(), phone: f.telephone.value.trim(), consent: f.consent.checked })
       });
       if (!r.ok) throw new Error(r.status);
       done();
