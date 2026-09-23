@@ -23,6 +23,20 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Diagnostic temporaire (visible dans l'onglet Réseau du navigateur, réponse de la
+    // requête) : à retirer une fois le problème identifié. N'affecte pas le formulaire,
+    // le site ne regarde que le statut 200, jamais ce contenu.
+    const debug = {
+      supabaseConfigured: false,
+      supabaseInitError: null,
+      supabaseError: null,
+      resendConfigured: false,
+      resendInitError: null,
+      notifyEmailSet: !!process.env.CONTACT_NOTIFY_EMAIL,
+      resendFromPreview: process.env.RESEND_FROM ? JSON.stringify(process.env.RESEND_FROM) : null,
+      resendError: null,
+    };
+
     // Les clients Supabase/Resend sont construits ICI, dans le try, plutôt qu'en haut
     // du fichier au chargement du module : si un module est introuvable ou une clé mal
     // formée fait planter sa construction, avant on ne le voyait jamais (Vercel renvoyait
@@ -37,7 +51,9 @@ module.exports = async (req, res) => {
       }
     } catch (err) {
       console.error('Erreur initialisation Supabase :', err);
+      debug.supabaseInitError = (err && err.message) || String(err);
     }
+    debug.supabaseConfigured = !!supabase;
     try {
       if (process.env.RESEND_API_KEY) {
         const { Resend } = require('resend');
@@ -45,7 +61,9 @@ module.exports = async (req, res) => {
       }
     } catch (err) {
       console.error('Erreur initialisation Resend :', err);
+      debug.resendInitError = (err && err.message) || String(err);
     }
+    debug.resendConfigured = !!resend;
 
     // Vercel lit et parse déjà le corps JSON de la requête automatiquement (req.body) :
     // il ne faut pas essayer de relire le flux brut soi-même (c'est ce qui causait
@@ -66,17 +84,6 @@ module.exports = async (req, res) => {
       res.status(400).json({ error: 'Champs manquants' });
       return;
     }
-
-    // Diagnostic temporaire (visible dans l'onglet Réseau du navigateur, réponse de la
-    // requête) : à retirer une fois le problème identifié. N'affecte pas le formulaire,
-    // le site ne regarde que le statut 200, jamais ce contenu.
-    const debug = {
-      supabaseConfigured: !!supabase,
-      supabaseError: null,
-      resendConfigured: !!resend,
-      notifyEmailSet: !!process.env.CONTACT_NOTIFY_EMAIL,
-      resendError: null,
-    };
 
     // 1. Supabase (best-effort : une erreur ici ne doit pas empêcher l'email de vous prévenir,
     // ni faire planter la fonction — d'où le try/catch : sans lui, une clé invalide ou une
