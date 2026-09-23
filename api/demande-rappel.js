@@ -25,30 +25,16 @@ const supabase =
     : null;
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-function readJsonBody(req) {
-  return new Promise((resolve, reject) => {
-    let data = '';
-    req.on('data', (chunk) => { data += chunk; });
-    req.on('end', () => {
-      try { resolve(data ? JSON.parse(data) : {}); } catch (err) { reject(err); }
-    });
-    req.on('error', reject);
-  });
-}
-
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method Not Allowed' });
     return;
   }
 
-  let body;
-  try {
-    body = await readJsonBody(req);
-  } catch (err) {
-    res.status(400).json({ error: 'JSON invalide' });
-    return;
-  }
+  // Vercel lit et parse déjà le corps JSON de la requête automatiquement (req.body) :
+  // il ne faut pas essayer de relire le flux brut soi-même (c'est ce qui causait
+  // l'erreur "Un problème est survenu" — req.body était ignoré et donc vide).
+  const body = req.body && typeof req.body === 'object' ? req.body : {};
 
   // anti-spam : champ caché rempli par un robot -> on répond "ok" sans rien faire
   if (body.website) {
