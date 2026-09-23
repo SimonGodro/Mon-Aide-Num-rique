@@ -75,20 +75,27 @@ module.exports = async (req, res) => {
   const amountTotal = session.amount_total ?? null;
   const currency = session.currency || 'eur';
 
-  // 1. Supabase (best-effort : une erreur ici ne doit pas empêcher l'envoi de l'email)
+  // 1. Supabase (best-effort : une erreur ici ne doit pas empêcher l'envoi de l'email —
+  // d'où le try/catch : sans lui, une table absente ou une clé invalide faisait planter
+  // toute la fonction avant d'arriver à l'envoi de l'email, exactement comme pour le
+  // formulaire "Contactez-nous" avant qu'on le corrige).
   if (supabase) {
-    const { error } = await supabase.from('abonnes').insert({
-      stripe_session_id: session.id,
-      email,
-      name,
-      phone,
-      plan,
-      amount_total: amountTotal,
-      currency,
-    });
-    // Code 23505 = doublon (Stripe peut rejouer le même webhook) : on l'ignore.
-    if (error && error.code !== '23505') {
-      console.error('Erreur insertion Supabase :', error);
+    try {
+      const { error } = await supabase.from('abonnes').insert({
+        stripe_session_id: session.id,
+        email,
+        name,
+        phone,
+        plan,
+        amount_total: amountTotal,
+        currency,
+      });
+      // Code 23505 = doublon (Stripe peut rejouer le même webhook) : on l'ignore.
+      if (error && error.code !== '23505') {
+        console.error('Erreur insertion Supabase :', error);
+      }
+    } catch (err) {
+      console.error('Exception Supabase (abonnes) :', err);
     }
   } else {
     console.warn('Supabase non configuré (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY manquants) — abonné non enregistré.');
@@ -99,7 +106,7 @@ module.exports = async (req, res) => {
     const paulNumber = process.env.PAUL_PHONE_NUMBER || 'communiqué très prochainement par email';
     try {
       await resend.emails.send({
-        from: process.env.RESEND_FROM || 'Mon Aide Numérique <onboarding@resend.dev>',
+        from: process.env.RESEND_FROM || '"Mon Aide Numerique" <onboarding@resend.dev>',
         to: email,
         subject: 'Votre accès à Paul est prêt',
         html: `
