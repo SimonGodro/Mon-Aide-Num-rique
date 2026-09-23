@@ -97,7 +97,7 @@ module.exports = async (req, res) => {
     if (resend && process.env.CONTACT_NOTIFY_EMAIL) {
       try {
         const sendResult = await resend.emails.send({
-          from: process.env.RESEND_FROM || 'Mon Aide Numérique <onboarding@resend.dev>',
+          from: process.env.RESEND_FROM || '"Mon Aide Numerique" <onboarding@resend.dev>',
           to: process.env.CONTACT_NOTIFY_EMAIL,
           subject: `Nouvelle demande de rappel — ${name}`,
           html: `
