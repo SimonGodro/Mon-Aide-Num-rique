@@ -57,7 +57,9 @@ a:hover{color:var(--accent-hover)}
 .head{display:flex;flex-direction:column;gap:16px;margin-bottom:36px}
 
 /* header */
-.top{padding:16px 0;background:var(--tint)}
+.hero-zone{background:linear-gradient(165deg,var(--tint) 0%,var(--tint-2) 55%,color-mix(in srgb, var(--bubble) 45%, var(--tint-2)) 100%);border-radius:0 0 40px 40px}
+@media (min-width:900px){.hero-zone{border-radius:0 0 64px 64px}}
+.top{padding:16px 0}
 .top-in{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .brand{font-family:'Outfit',system-ui,sans-serif;font-weight:600;font-size:1.85rem;letter-spacing:-0.02em;color:var(--ink);text-decoration:none;min-height:48px;display:inline-flex;align-items:center;gap:12px}
 .logo-mark{color:var(--accent);flex-shrink:0}
@@ -74,6 +76,7 @@ a:hover{color:var(--accent-hover)}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 30px;border-radius:16px;background:var(--accent);color:var(--on-accent);border:2px solid var(--accent);font:inherit;font-weight:700;font-size:1.05rem;text-decoration:none;cursor:pointer;text-align:center}
 .btn:hover{background:var(--accent-hover);border-color:var(--accent-hover);color:var(--on-accent)}
 .btn-small{min-height:48px;padding:0 22px}
+.top-cta{border-radius:8px}
 .btn-outline{background:transparent;color:var(--accent-ink);border-color:var(--accent-ink)}
 .btn-outline:hover{background:var(--tint);color:var(--accent-hover);border-color:var(--accent-hover)}
 .hint{color:var(--muted);font-size:1.02rem}
@@ -105,8 +108,8 @@ a:hover{color:var(--accent-hover)}
 .todo{background:var(--todo);color:var(--todo-ink);padding:0 5px;border-radius:5px;font-weight:700}
 
 /* hero */
-.hero{padding:24px 0 72px;background:linear-gradient(180deg,var(--tint) 0%,var(--tint-2) 100%);border-radius:0 0 40px 40px}
-@media (min-width:900px){.hero{padding:24px 0 96px;border-radius:0 0 64px 64px}}
+.hero{padding:24px 0 72px}
+@media (min-width:900px){.hero{padding:24px 0 96px}}
 .hero-grid{display:grid;gap:48px}
 @media (min-width:960px){.hero-grid{grid-template-columns:1.1fr 0.9fr;align-items:start;gap:72px}}
 .hero-copy{display:flex;flex-direction:column;align-items:flex-start;gap:24px}
@@ -293,6 +296,7 @@ p,.lead,.hint,.ans,td,th{text-wrap:pretty}
 <div style="width:100%">
 <a class="skip" href="#contenu">Aller au contenu</a>
 
+<div class="hero-zone">
 <header class="top">
   <div class="wrap top-in">
     <a class="brand" href="#top" aria-label="Paul, retour en haut de la page"><svg class="logo-mark" width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><rect x="0" y="0" width="40" height="40" rx="12" fill="currentColor"></rect><path class="logo-phone" transform="translate(8 8)" d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A15 15 0 013 6a2 2 0 012-2z" stroke-width="1.6" stroke-linejoin="round"></path></svg><span>Paul</span></a>
@@ -311,9 +315,9 @@ p,.lead,.hint,.ans,td,th{text-wrap:pretty}
   <button type="button" class="dialog-close" data-close-dialog aria-label="Fermer">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg>
   </button>
-  <p class="eyebrow">Une question avant de vous lancer&nbsp;?</p>
-  <h2 id="titre-rappel">Laissez-nous votre numéro, on vous rappelle.</h2>
-  <p class="lead">Pas envie de souscrire tout de suite&nbsp;? Dites-nous comment vous joindre, on répond à vos questions par téléphone.</p>
+  <p class="eyebrow">Contactez-nous</p>
+  <h2 id="titre-rappel">On vous rappelle, sans engagement.</h2>
+  <p class="lead">Laissez-nous votre prénom et votre numéro&nbsp;: un membre de notre équipe vous appellera pour répondre à toutes vos questions concernant l’assistant Paul.</p>
   <div id="form-wrap-rappel">
     <form class="form" data-n="rappel" aria-label="Être rappelé">
       <div class="form-row">
@@ -330,8 +334,6 @@ p,.lead,.hint,.ans,td,th{text-wrap:pretty}
   </div>
   <p class="thanks" id="thanks-rappel" role="status" hidden>Merci&nbsp;! Nous vous rappellerons rapidement.</p>
 </dialog>
-
-<main id="contenu">
 
   <!-- 1. HERO -->
   <section class="hero" id="top" aria-labelledby="titre-hero">
@@ -370,6 +372,9 @@ p,.lead,.hint,.ans,td,th{text-wrap:pretty}
       </figure>
     </div>
   </section>
+</div>
+
+<main id="contenu">
 
   <!-- 2. EXEMPLES -->
   <section class="section" id="exemples" aria-labelledby="titre-exemples">
@@ -604,12 +609,9 @@ p,.lead,.hint,.ans,td,th{text-wrap:pretty}
 </footer>
 </div>
 <script>
-/* ===== Formulaire "Être rappelé" → Supabase (table demandes_rappel) =====
-   Clé "anon" publique : elle ne permet que l'INSERT dans cette table (voir la
-   politique RLS côté Supabase), jamais la lecture. */
-const SUPABASE_URL = "https://mjzjkszswgczcmwwncvy.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_ZDZ3JujG70O_-TBPvxaT6g_bd3S2BfA";
-
+/* ===== Formulaire "Contactez-nous" (être rappelé) → /api/demande-rappel =====
+   L'enregistrement dans Supabase et l'email qui vous prévient sont faits côté
+   serveur (voir api/demande-rappel.js) : rien de sensible n'est exposé ici. */
 document.querySelectorAll('form[data-n]').forEach(function (form) {
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -624,9 +626,9 @@ document.querySelectorAll('form[data-n]').forEach(function (form) {
     if (f.website.value) { done(); return; } /* anti-spam : champ caché rempli par un robot */
     btn.disabled = true; hint.textContent = "";
     try {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/demandes_rappel', {
+      const r = await fetch('/api/demande-rappel', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Prefer': 'return=minimal' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: f.prenom.value.trim(), phone: f.telephone.value.trim(), consent: f.consent.checked })
       });
       if (!r.ok) throw new Error(r.status);
