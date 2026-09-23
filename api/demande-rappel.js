@@ -16,20 +16,35 @@
  *                              demandes de rappel (probablement la vôtre, Simon)
  */
 
-const { createClient } = require('@supabase/supabase-js');
-const { Resend } = require('resend');
-
-const supabase =
-  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-    ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
-    : null;
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-
 module.exports = async (req, res) => {
   try {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed' });
       return;
+    }
+
+    // Les clients Supabase/Resend sont construits ICI, dans le try, plutôt qu'en haut
+    // du fichier au chargement du module : si un module est introuvable ou une clé mal
+    // formée fait planter sa construction, avant on ne le voyait jamais (Vercel renvoyait
+    // un 500 générique avant même d'exécuter une ligne à nous) — maintenant c'est capturé
+    // et le détail est renvoyé ci-dessous, dans la réponse, pour diagnostiquer facilement.
+    let supabase = null;
+    let resend = null;
+    try {
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const { createClient } = require('@supabase/supabase-js');
+        supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+      }
+    } catch (err) {
+      console.error('Erreur initialisation Supabase :', err);
+    }
+    try {
+      if (process.env.RESEND_API_KEY) {
+        const { Resend } = require('resend');
+        resend = new Resend(process.env.RESEND_API_KEY);
+      }
+    } catch (err) {
+      console.error('Erreur initialisation Resend :', err);
     }
 
     // Vercel lit et parse déjà le corps JSON de la requête automatiquement (req.body) :
@@ -92,7 +107,10 @@ module.exports = async (req, res) => {
     // Filet de sécurité : si quelque chose d'imprévu plante, on le journalise clairement
     // (visible dans Vercel > Deployments > ce déploiement > Functions > demande-rappel,
     // onglet "Logs") au lieu de laisser Vercel renvoyer une erreur 500 muette.
+    // "detail" est temporaire, pour diagnostiquer facilement depuis l'onglet Réseau du
+    // navigateur : à retirer une fois le problème identifié et corrigé (ne contient rien
+    // de confidentiel — juste le message d'erreur technique Node/Supabase/Resend).
     console.error('Erreur inattendue /api/demande-rappel :', err);
-    res.status(500).json({ error: 'Erreur serveur' });
+    res.status(500).json({ error: 'Erreur serveur', detail: String((err && err.message) || err) });
   }
 };
