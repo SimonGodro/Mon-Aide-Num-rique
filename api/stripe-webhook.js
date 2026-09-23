@@ -114,7 +114,8 @@ module.exports = async (req, res) => {
           <p>Merci pour votre abonnement <strong>${plan}</strong> à Mon Aide Numérique.</p>
           <p>Voici le numéro à appeler pour joindre Paul&nbsp;:</p>
           <p style="font-size:1.4em;font-weight:700">${paulNumber}</p>
-          <p>Vous pouvez transmettre ce numéro à la personne qui doit appeler Paul (par exemple un de vos parents).</p>
+          <p>Nous vous conseillons de l'enregistrer tout de suite dans vos contacts (par exemple sous le nom « Paul Assistant »), pour ne pas risquer de l'oublier ou de le perdre.</p>
+          <p>Si vous avez souscrit à cet abonnement pour un autre, vous pouvez transmettre ce numéro à la personne qui doit appeler Paul (par exemple un de vos parents).</p>
           <p>À bientôt,<br>L'équipe Mon Aide Numérique</p>
         `,
       });
