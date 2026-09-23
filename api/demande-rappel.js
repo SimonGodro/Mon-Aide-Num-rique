@@ -26,59 +26,73 @@ const supabase =
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 module.exports = async (req, res) => {
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method Not Allowed' });
-    return;
-  }
-
-  // Vercel lit et parse déjà le corps JSON de la requête automatiquement (req.body) :
-  // il ne faut pas essayer de relire le flux brut soi-même (c'est ce qui causait
-  // l'erreur "Un problème est survenu" — req.body était ignoré et donc vide).
-  const body = req.body && typeof req.body === 'object' ? req.body : {};
-
-  // anti-spam : champ caché rempli par un robot -> on répond "ok" sans rien faire
-  if (body.website) {
-    res.status(200).json({ ok: true });
-    return;
-  }
-
-  const name = (body.name || '').toString().trim().slice(0, 200);
-  const phone = (body.phone || '').toString().trim().slice(0, 50);
-  const consent = !!body.consent;
-
-  if (!name || !phone || !consent) {
-    res.status(400).json({ error: 'Champs manquants' });
-    return;
-  }
-
-  // 1. Supabase (best-effort : une erreur ici ne doit pas empêcher l'email de vous prévenir)
-  if (supabase) {
-    const { error } = await supabase.from('demandes_rappel').insert({ name, phone, consent });
-    if (error) console.error('Erreur insertion Supabase (demandes_rappel) :', error);
-  } else {
-    console.warn('Supabase non configuré (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY manquants) — demande non enregistrée.');
-  }
-
-  // 2. Email pour vous prévenir qu'il faut rappeler la personne
-  if (resend && process.env.CONTACT_NOTIFY_EMAIL) {
-    try {
-      await resend.emails.send({
-        from: process.env.RESEND_FROM || 'Mon Aide Numérique <onboarding@resend.dev>',
-        to: process.env.CONTACT_NOTIFY_EMAIL,
-        subject: `Nouvelle demande de rappel — ${name}`,
-        html: `
-          <p>Nouvelle demande de rappel reçue sur le site "Contactez-nous".</p>
-          <p><strong>Prénom&nbsp;:</strong> ${name}<br>
-          <strong>Téléphone&nbsp;:</strong> ${phone}</p>
-          <p>Merci de la rappeler dès que possible.</p>
-        `,
-      });
-    } catch (err) {
-      console.error('Erreur envoi email Resend (demande de rappel) :', err);
+  try {
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method Not Allowed' });
+      return;
     }
-  } else {
-    console.warn('Resend ou CONTACT_NOTIFY_EMAIL non configuré — email de notification non envoyé.');
-  }
 
-  res.status(200).json({ ok: true });
+    // Vercel lit et parse déjà le corps JSON de la requête automatiquement (req.body) :
+    // il ne faut pas essayer de relire le flux brut soi-même (c'est ce qui causait
+    // l'erreur "Un problème est survenu" — req.body était ignoré et donc vide).
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+
+    // anti-spam : champ caché rempli par un robot -> on répond "ok" sans rien faire
+    if (body.website) {
+      res.status(200).json({ ok: true });
+      return;
+    }
+
+    const name = (body.name || '').toString().trim().slice(0, 200);
+    const phone = (body.phone || '').toString().trim().slice(0, 50);
+    const consent = !!body.consent;
+
+    if (!name || !phone || !consent) {
+      res.status(400).json({ error: 'Champs manquants' });
+      return;
+    }
+
+    // 1. Supabase (best-effort : une erreur ici ne doit pas empêcher l'email de vous prévenir,
+    // ni faire planter la fonction — d'où le try/catch : sans lui, une clé invalide ou une
+    // table absente faisait remonter une erreur non gérée et renvoyait "Un problème est survenu").
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('demandes_rappel').insert({ name, phone, consent });
+        if (error) console.error('Erreur insertion Supabase (demandes_rappel) :', error);
+      } catch (err) {
+        console.error('Exception Supabase (demandes_rappel) :', err);
+      }
+    } else {
+      console.warn('Supabase non configuré (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY manquants) — demande non enregistrée.');
+    }
+
+    // 2. Email pour vous prévenir qu'il faut rappeler la personne
+    if (resend && process.env.CONTACT_NOTIFY_EMAIL) {
+      try {
+        await resend.emails.send({
+          from: process.env.RESEND_FROM || 'Mon Aide Numérique <onboarding@resend.dev>',
+          to: process.env.CONTACT_NOTIFY_EMAIL,
+          subject: `Nouvelle demande de rappel — ${name}`,
+          html: `
+            <p>Nouvelle demande de rappel reçue sur le site "Contactez-nous".</p>
+            <p><strong>Prénom&nbsp;:</strong> ${name}<br>
+            <strong>Téléphone&nbsp;:</strong> ${phone}</p>
+            <p>Merci de la rappeler dès que possible.</p>
+          `,
+        });
+      } catch (err) {
+        console.error('Erreur envoi email Resend (demande de rappel) :', err);
+      }
+    } else {
+      console.warn('Resend ou CONTACT_NOTIFY_EMAIL non configuré — email de notification non envoyé.');
+    }
+
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    // Filet de sécurité : si quelque chose d'imprévu plante, on le journalise clairement
+    // (visible dans Vercel > Deployments > ce déploiement > Functions > demande-rappel,
+    // onglet "Logs") au lieu de laisser Vercel renvoyer une erreur 500 muette.
+    console.error('Erreur inattendue /api/demande-rappel :', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 };
